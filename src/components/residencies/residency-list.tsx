@@ -515,8 +515,8 @@ export function ResidencyList() {
   return (
     <div className="flex gap-6">
       <div className="flex-1 min-w-0">
-        {/* Filters - sticky on mobile with background */}
-        <div className="sticky top-20 z-20 flex flex-col gap-3 pb-4">
+        {/* Filters */}
+        <div className="flex flex-col gap-3 pb-4">
           {/* Tabs */}
           <Tabs value={selectedType} onValueChange={setSelectedType}>
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
