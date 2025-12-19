@@ -1,4 +1,21 @@
 import { ResidencyList } from "@/components/residencies/residency-list";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Residency Positions | ISE",
+  description: "Browse open residency positions from our industry partners. Find R1, R2, R3, and R4 opportunities with top companies in software engineering.",
+  openGraph: {
+    title: "ISE Residency Positions",
+    description: "Browse open residency positions from our industry partners. Find opportunities with top companies in software engineering.",
+    type: "website",
+    siteName: "Immersive Software Engineering",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ISE Residency Positions",
+    description: "Browse open residency positions from our industry partners. Find opportunities with top companies in software engineering.",
+  },
+};
 
 export default function ResidenciesPage() {
   return (
