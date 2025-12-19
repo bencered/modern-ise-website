@@ -31,10 +31,7 @@ export const MobileNavbar = () => {
       <DrawerContent className="max-h-[60svh] p-0">
         <div className="flex flex-col space-y-3 overflow-auto p-6">
           <Link href="/">Home</Link>
-          <Link href="/">About Us</Link>
-          <Link href="/">Course Details</Link>
-          <Link href="/">Partner With Us</Link>
-          <Link href="/">Contact</Link>
+          <Link href="/residencies">Residencies</Link>
         </div>
       </DrawerContent>
     </Drawer>
