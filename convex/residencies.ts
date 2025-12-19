@@ -25,7 +25,12 @@ export const list = query({
       })
     );
 
-    return residenciesWithCompanies;
+    // Sort by company name
+    return residenciesWithCompanies.sort((a, b) => {
+      const nameA = a.company?.name || a.name || "";
+      const nameB = b.company?.name || b.name || "";
+      return nameA.localeCompare(nameB);
+    });
   },
 });
 
@@ -55,7 +60,7 @@ export const listCompanies = query({
   args: {},
   handler: async (ctx) => {
     const companies = await ctx.db.query("companies").collect();
-    return Promise.all(
+    const companiesWithImages = await Promise.all(
       companies.map(async (company) => ({
         ...company,
         imageUrl: company.imageId
@@ -63,5 +68,7 @@ export const listCompanies = query({
           : null,
       }))
     );
+    // Sort by company name
+    return companiesWithImages.sort((a, b) => a.name.localeCompare(b.name));
   },
 });
