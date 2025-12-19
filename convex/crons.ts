@@ -3,9 +3,9 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-crons.daily(
+crons.interval(
   "sync residencies",
-  { hourUTC: 21, minuteUTC: 0 }, // 9pm UTC
+  { hours: 16 },
   internal.sync.syncAllResidencies
 );
 

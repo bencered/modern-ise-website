@@ -39,9 +39,9 @@ const TYPE_ORDER = ["R1", "R1+R2", "R2", "R3", "R4"];
 
 const SORT_OPTIONS = [
   { value: "company", label: "Company Name" },
+  { value: "latest", label: "Latest Added" },
   { value: "rating", label: "My Rating" },
   { value: "salary-high", label: "Salary (High to Low)" },
-  { value: "salary-low", label: "Salary (Low to High)" },
 ];
 
 interface Company {
@@ -315,14 +315,14 @@ export function ResidencyList() {
         const nameA = a.company?.name || a.name || "";
         const nameB = b.company?.name || b.name || "";
         return nameA.localeCompare(nameB);
+      } else if (sortBy === "latest") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortBy === "rating") {
         const ratingA = personalRatings[a._id] || 0;
         const ratingB = personalRatings[b._id] || 0;
         return ratingB - ratingA;
       } else if (sortBy === "salary-high") {
         return parseSalary(b.monthlySalary) - parseSalary(a.monthlySalary);
-      } else if (sortBy === "salary-low") {
-        return parseSalary(a.monthlySalary) - parseSalary(b.monthlySalary);
       }
       return 0;
     };
@@ -434,14 +434,14 @@ export function ResidencyList() {
         const nameA = a.company?.name || a.name || "";
         const nameB = b.company?.name || b.name || "";
         return nameA.localeCompare(nameB);
+      } else if (sortBy === "latest") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortBy === "rating") {
         const ratingA = personalRatings[a._id] || 0;
         const ratingB = personalRatings[b._id] || 0;
         return ratingB - ratingA; // High to low
       } else if (sortBy === "salary-high") {
         return parseSalary(b.monthlySalary) - parseSalary(a.monthlySalary);
-      } else if (sortBy === "salary-low") {
-        return parseSalary(a.monthlySalary) - parseSalary(b.monthlySalary);
       }
       return 0;
     });
