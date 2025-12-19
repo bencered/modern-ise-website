@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theming/theme-provider";
+import { ConvexClientProvider } from "@/components/convex-provider";
 import { Navbar } from "@/components/navbar/navbar";
 import { Footer } from "@/components/footer";
 
@@ -33,11 +34,13 @@ export default function RootLayout({
             ${geistMono.variable} 
             antialiased font-mono [background-image:radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.6)_1px,transparent_0)] [background-size:30px_30px] dark:[background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)]`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          <Navbar />
-          {children}
-          <Footer />
-        </ThemeProvider>
+        <ConvexClientProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+            <Navbar />
+            {children}
+            <Footer />
+          </ThemeProvider>
+        </ConvexClientProvider>
       </body>
     </html >
   );
