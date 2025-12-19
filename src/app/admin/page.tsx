@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Upload, Save, RefreshCw, Merge, Check, X } from "lucide-react";
+import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin } from "lucide-react";
 import Image from "next/image";
 
 function CompanyCard({
@@ -247,17 +247,32 @@ function CompanyManager() {
 function ResidencyManager() {
   const residencies = useQuery(api.residencies.list);
   const updateDescription = useMutation(api.mutations.updateResidencyDescription);
-  const [editingId, setEditingId] = useState<Id<"residencies"> | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const updateLocation = useMutation(api.mutations.updateResidencyLocation);
+  const [editingDescId, setEditingDescId] = useState<Id<"residencies"> | null>(null);
+  const [editingLocId, setEditingLocId] = useState<Id<"residencies"> | null>(null);
+  const [editDescValue, setEditDescValue] = useState("");
+  const [editLocValue, setEditLocValue] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function handleSave(residencyId: Id<"residencies">) {
+  async function handleSaveDescription(residencyId: Id<"residencies">) {
     setSaving(true);
     try {
-      await updateDescription({ residencyId, description: editValue });
-      setEditingId(null);
+      await updateDescription({ residencyId, description: editDescValue });
+      setEditingDescId(null);
     } catch (error) {
       console.error("Failed to save description:", error);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveLocation(residencyId: Id<"residencies">) {
+    setSaving(true);
+    try {
+      await updateLocation({ residencyId, location: editLocValue });
+      setEditingLocId(null);
+    } catch (error) {
+      console.error("Failed to save location:", error);
     } finally {
       setSaving(false);
     }
@@ -284,61 +299,116 @@ function ResidencyManager() {
               <Badge variant="outline">{residency.residencyType}</Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            {editingId === residency._id ? (
-              <div className="space-y-3">
-                <Textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  placeholder="Enter job description..."
-                  rows={6}
-                />
+          <CardContent className="space-y-4">
+            {/* Location */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <MapPin className="h-4 w-4" />
+                Location
+              </div>
+              {editingLocId === residency._id ? (
                 <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editLocValue}
+                    onChange={(e) => setEditLocValue(e.target.value)}
+                    placeholder="e.g. Dublin, Ireland"
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
                   <Button
                     size="sm"
-                    onClick={() => handleSave(residency._id)}
+                    onClick={() => handleSaveLocation(residency._id)}
                     disabled={saving}
                   >
-                    {saving ? (
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="mr-2 h-4 w-4" />
-                    )}
-                    Save
+                    {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setEditingId(null)}
+                    onClick={() => setEditingLocId(null)}
                     disabled={saving}
                   >
-                    Cancel
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {residency.description ? (
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
-                    {residency.description}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    No description set
-                  </p>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setEditingId(residency._id);
-                    setEditValue(residency.description || "");
-                  }}
-                >
-                  Edit Description
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {residency.location || <span className="italic">Not set</span>}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2"
+                    onClick={() => {
+                      setEditingLocId(residency._id);
+                      setEditLocValue(residency.location || "");
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Description</div>
+              {editingDescId === residency._id ? (
+                <div className="space-y-3">
+                  <Textarea
+                    value={editDescValue}
+                    onChange={(e) => setEditDescValue(e.target.value)}
+                    placeholder="Enter job description..."
+                    rows={6}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveDescription(residency._id)}
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingDescId(null)}
+                      disabled={saving}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {residency.description ? (
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                      {residency.description}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      No description set
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingDescId(residency._id);
+                      setEditDescValue(residency.description || "");
+                    }}
+                  >
+                    Edit Description
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}

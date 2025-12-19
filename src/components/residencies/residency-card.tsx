@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BriefcaseBusiness, Building2 } from "lucide-react";
+import { BriefcaseBusiness, Building2, Star } from "lucide-react";
 import Image from "next/image";
 
 interface Company {
@@ -27,6 +27,8 @@ interface ResidencyCardProps {
   residency: Residency;
   isSelected: boolean;
   onClick: () => void;
+  personalRating?: number;
+  aggregateCount?: number;
 }
 
 function formatSalary(salary?: string): string | null {
@@ -68,13 +70,14 @@ function cleanName(name: string): string {
     .trim();
 }
 
-export function ResidencyCard({ residency, isSelected, onClick }: ResidencyCardProps) {
+export function ResidencyCard({ residency, isSelected, onClick, personalRating, aggregateCount }: ResidencyCardProps) {
   const rawName = residency.company?.name || residency.name.split("|")[1]?.trim() || residency.name;
   const companyName = cleanName(rawName);
   const formattedSalary = formatSalary(residency.monthlySalary);
 
   return (
     <Card
+      data-residency-id={residency._id}
       onClick={onClick}
       className={`group cursor-pointer border-border/50 bg-card transition-all duration-200 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/5 ${
         isSelected ? "border-green-500 ring-1 ring-green-500" : ""
@@ -118,11 +121,30 @@ export function ResidencyCard({ residency, isSelected, onClick }: ResidencyCardP
             <span className="line-clamp-2">{residency.jobTitle}</span>
           </div>
 
-          {formattedSalary && (
-            <Badge variant="secondary" className="font-mono text-xs">
-              {formattedSalary}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {aggregateCount && (
+              <Badge className="bg-blue-500 text-white hover:bg-blue-600">
+                {aggregateCount} {aggregateCount === 1 ? "position" : "positions"}
+              </Badge>
+            )}
+            {formattedSalary && (
+              <Badge variant="secondary" className="font-mono text-xs">
+                {formattedSalary}
+              </Badge>
+            )}
+            {personalRating && (
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star
+                    key={i}
+                    className={`h-3.5 w-3.5 ${
+                      i <= personalRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

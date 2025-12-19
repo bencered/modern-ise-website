@@ -116,6 +116,18 @@ export const updateResidencyDescription = mutation({
   },
 });
 
+export const updateResidencyLocation = mutation({
+  args: {
+    residencyId: v.id("residencies"),
+    location: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.residencyId, {
+      location: args.location || undefined,
+    });
+  },
+});
+
 export const mergeCompanies = mutation({
   args: {
     targetId: v.id("companies"),
