@@ -6,7 +6,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import Image from "next/image"
-import { Menu } from "lucide-react";
+import { Menu, Github } from "lucide-react";
 import Link from "next/link";
 import { ThemeSwapButton } from "../theming/theme-swap-button";
 
@@ -21,8 +21,16 @@ export const MobileNavbar = () => {
           alt="The ISE and University of Limerick logos, side-by-side."
           className="rounded-xl invert dark:invert-0"
         />
-        <div className="flex flex-row items-center gap-x-4">
+        <div className="flex flex-row items-center gap-x-3">
           <ThemeSwapButton />
+          <a
+            href="https://github.com/bencered/modern-ise-website"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center rounded-full bg-green-500 p-2 text-white transition-colors hover:bg-green-600"
+          >
+            <Github className="h-4 w-4" />
+          </a>
           <DrawerTrigger >
             <Menu />
           </DrawerTrigger>
@@ -32,6 +40,15 @@ export const MobileNavbar = () => {
         <div className="flex flex-col space-y-3 overflow-auto p-6">
           <Link href="/">Home</Link>
           <Link href="/residencies">Residencies</Link>
+          <a
+            href="https://github.com/bencered/modern-ise-website"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-green-500"
+          >
+            <Github className="h-4 w-4" />
+            Contribute on GitHub
+          </a>
         </div>
       </DrawerContent>
     </Drawer>
