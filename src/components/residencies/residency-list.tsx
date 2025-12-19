@@ -289,7 +289,7 @@ export function ResidencyList() {
   const allResidencies = useQuery(api.residencies.list);
 
   // Get flat list of residency IDs for keyboard navigation
-  const navigationIds = useMemo(() => {
+  const navigationIds = useMemo((): Id<"residencies">[] => {
     if (!allResidencies) return [];
 
     let filtered = [...allResidencies];
@@ -324,7 +324,7 @@ export function ResidencyList() {
 
     // When showing all types, group by type first (matching visual order)
     if (selectedType === "all") {
-      const result: string[] = [];
+      const result: Id<"residencies">[] = [];
       for (const type of TYPE_ORDER) {
         const typeItems = filtered.filter((r) => r.residencyType === type);
         typeItems.sort(sortFn);
