@@ -23,6 +23,7 @@ export default defineSchema({
     emailAddress: v.optional(v.string()),
     monthlySalary: v.optional(v.string()),
     accommodationSupport: v.optional(v.string()),
+    location: v.optional(v.string()),
     companyId: v.optional(v.id("companies")),
     createdAt: v.string(),
     syncedAt: v.number(),

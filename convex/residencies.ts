@@ -72,3 +72,4 @@ export const listCompanies = query({
     return companiesWithImages.sort((a, b) => a.name.localeCompare(b.name));
   },
 });
+
