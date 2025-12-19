@@ -34,32 +34,16 @@ interface ResidencyCardProps {
 function formatSalary(salary?: string): string | null {
   if (!salary) return null;
 
-  const lower = salary.toLowerCase().trim();
-  if (lower === "competitive" || lower === "tbc" || lower === "n/d") {
-    return salary;
+  // Get first line only
+  const firstLine = salary.split(/\n/)[0].trim();
+  if (!firstLine) return null;
+
+  // Truncate if too long
+  if (firstLine.length > 50) {
+    return firstLine.slice(0, 50) + "…";
   }
 
-  // Look for explicit euro amounts (€X,XXX or €XXXX format)
-  const euroMatch = salary.match(/€\s*([\d,]+)/);
-  if (euroMatch) {
-    const num = euroMatch[1].replace(/,/g, "");
-    // Only show if it's a reasonable salary amount (3+ digits)
-    if (num.length >= 3) {
-      return `€${euroMatch[1]}`;
-    }
-  }
-
-  // If salary text is long (description-like), show "See details"
-  if (salary.length > 50) {
-    return "See details";
-  }
-
-  // For short values that aren't euro amounts, show as-is
-  if (salary.length <= 20) {
-    return salary;
-  }
-
-  return "See details";
+  return firstLine;
 }
 
 function cleanName(name: string): string {

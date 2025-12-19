@@ -180,7 +180,12 @@ function ResidencyTableRow({ residency, isSelected, onClick, personalRating, agg
       </td>
       <td className="px-4 py-3 text-sm">
         {residency.monthlySalary ? (
-          <span className="font-mono text-xs">{residency.monthlySalary.split(/[,\n]/)[0]}</span>
+          <span className="font-mono text-xs">
+            {(() => {
+              const salary = residency.monthlySalary.split(/\n/)[0];
+              return salary.length > 65 ? salary.slice(0, 65) + "…" : salary;
+            })()}
+          </span>
         ) : (
           <span className="text-muted-foreground">-</span>
         )}
