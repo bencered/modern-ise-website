@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Github } from "lucide-react";
 
 import ISE_UL_LOGO from "/public/ise-ul-logo.png";
 
@@ -45,8 +46,17 @@ export function PcNavbar() {
         </NavigationMenuList>
       </NavigationMenu>
 
-      <div className="ml-auto mr-4">
+      <div className="ml-auto flex items-center gap-3">
         <ThemeSwapButton />
+        <a
+          href="https://github.com/bencered/modern-ise-website"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
+        >
+          <Github className="h-4 w-4" />
+          Contribute
+        </a>
       </div>
     </div>
   );

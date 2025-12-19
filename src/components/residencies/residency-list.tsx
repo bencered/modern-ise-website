@@ -136,9 +136,8 @@ function ResidencyTableRow({ residency, isSelected, onClick, personalRating, agg
     <tr
       data-residency-id={residency._id}
       onClick={onClick}
-      className={`cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/50 ${
-        isSelected ? "bg-green-500/10" : ""
-      }`}
+      className={`cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/50 ${isSelected ? "bg-green-500/10" : ""
+        }`}
     >
       {aggregateCount !== undefined && (
         <td className="w-12 px-2 py-3 text-center">
@@ -199,9 +198,8 @@ function ResidencyTableRow({ residency, isSelected, onClick, personalRating, agg
             {[1, 2, 3, 4, 5].map((i) => (
               <Star
                 key={i}
-                className={`h-3.5 w-3.5 ${
-                  i <= personalRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"
-                }`}
+                className={`h-3.5 w-3.5 ${i <= personalRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"
+                  }`}
               />
             ))}
           </div>
@@ -263,7 +261,7 @@ export function ResidencyList() {
   const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [personalRatings, setPersonalRatings] = useState<Record<string, number>>({});
-  const [aggregateByCompany, setAggregateByCompany] = useState(false);
+  const [aggregateByCompany, setAggregateByCompany] = useState(true);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const isMobile = useIsMobile();
@@ -547,8 +545,8 @@ export function ResidencyList() {
                   setShowSortOptions(false);
                 }}
                 className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedLocations.length > 0
-                    ? "border-green-500 bg-green-500/10 text-green-500"
-                    : "border-border bg-background hover:bg-muted"
+                  ? "border-green-500 bg-green-500/10 text-green-500"
+                  : "border-border bg-background hover:bg-muted"
                   }`}
               >
                 <MapPin className="h-4 w-4" />
@@ -634,11 +632,10 @@ export function ResidencyList() {
             {/* Aggregate toggle */}
             <button
               onClick={() => setAggregateByCompany(!aggregateByCompany)}
-              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                aggregateByCompany
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${aggregateByCompany
                   ? "border-blue-500 bg-blue-500/10 text-blue-500"
                   : "border-border bg-background hover:bg-muted"
-              }`}
+                }`}
             >
               <Layers className="h-4 w-4" />
               Group by Company
@@ -648,22 +645,20 @@ export function ResidencyList() {
             <div className="flex items-center rounded-full border border-border bg-background p-0.5">
               <button
                 onClick={() => setViewMode("cards")}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${
-                  viewMode === "cards"
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${viewMode === "cards"
                     ? "bg-muted font-medium"
                     : "hover:bg-muted/50"
-                }`}
+                  }`}
               >
                 <LayoutGrid className="h-4 w-4" />
                 Cards
               </button>
               <button
                 onClick={() => setViewMode("table")}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${
-                  viewMode === "table"
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${viewMode === "table"
                     ? "bg-muted font-medium"
                     : "hover:bg-muted/50"
-                }`}
+                  }`}
               >
                 <Table className="h-4 w-4" />
                 Table
