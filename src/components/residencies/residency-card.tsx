@@ -107,7 +107,7 @@ export function ResidencyCard({ residency, isSelected, onClick, personalRating, 
 
           <div className="flex items-center gap-2">
             {aggregateCount && (
-              <Badge className="bg-blue-500 text-white hover:bg-blue-600">
+              <Badge className="whitespace-nowrap bg-blue-500 text-white hover:bg-blue-600">
                 {aggregateCount} {aggregateCount === 1 ? "position" : "positions"}
               </Badge>
             )}
