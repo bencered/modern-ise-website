@@ -1,0 +1,54 @@
+# ISE Residencies
+
+> Directory of industry residency positions for Irish software engineering students.
+
+This site lists R1, R2, R3, and R4 residency positions from companies partnered with Irish universities.
+
+## API
+
+Public JSON API for programmatic access:
+
+### List Residencies
+GET /api/residencies
+
+Query parameters:
+- type: Filter by R1, R1+R2, R2, R3, R4
+- location: Filter by location (partial match)
+- limit: Results per page (default 50, max 100)
+- format: "json" (default) or "markdown"
+
+Examples:
+- /api/residencies
+- /api/residencies?type=R1
+- /api/residencies?location=Dublin
+- /api/residencies?format=markdown
+
+### Get Single Residency
+GET /api/residencies/{id}
+
+Query parameters:
+- format: "json" (default) or "markdown"
+
+## Rate Limits
+
+- 60 requests/minute for list endpoint
+- 120 requests/minute for single item endpoint
+
+## Data Structure
+
+Each residency includes:
+- id: Unique identifier
+- residencyType: R1, R1+R2, R2, R3, or R4
+- residencyTitle: Position title
+- jobTitle: Role name
+- description: Full job description
+- location: Office location
+- monthlySalary: Compensation info
+- accommodationSupport: Housing assistance details
+- emailAddress: Application contact
+- company: { name, website, imageUrl }
+- createdAt: Posting date
+
+## Contact
+
+Website: https://ise.bence.red
