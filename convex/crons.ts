@@ -3,9 +3,11 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-crons.interval(
+// Run every hour from 8am to 7pm UTC (12 times per day)
+// Adjust the hours if you need a different timezone
+crons.cron(
   "sync residencies",
-  { hours: 16 },
+  "0 8-19 * * *",
   internal.sync.syncAllResidencies
 );
 
