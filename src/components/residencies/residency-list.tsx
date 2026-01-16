@@ -522,11 +522,11 @@ export function ResidencyList() {
                 <TabsTrigger
                   key={type.value}
                   value={type.value}
-                  className="shrink-0 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium transition-all data-[state=active]:border-green-500 data-[state=active]:bg-green-950 data-[state=active]:text-green-500"
+                  className="group shrink-0 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-all hover:bg-zinc-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-600 data-[state=active]:text-white dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:data-[state=active]:border-green-500 dark:data-[state=active]:bg-green-600 dark:data-[state=active]:text-white"
                 >
                   {type.label}
                   {typeCounts[type.value] !== undefined && (
-                    <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">
+                    <span className="ml-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-700 group-data-[state=active]:bg-green-700 group-data-[state=active]:text-white dark:bg-zinc-600 dark:text-zinc-200 dark:group-data-[state=active]:bg-green-700 dark:group-data-[state=active]:text-white">
                       {typeCounts[type.value]}
                     </span>
                   )}
@@ -545,8 +545,8 @@ export function ResidencyList() {
                   setShowSortOptions(false);
                 }}
                 className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedLocations.length > 0
-                  ? "border-green-500 bg-green-500/10 text-green-500"
-                  : "border-border bg-background hover:bg-muted"
+                  ? "border-green-600 bg-green-600 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
                   }`}
               >
                 <MapPin className="h-4 w-4" />
@@ -604,7 +604,7 @@ export function ResidencyList() {
                   setShowSortOptions(!showSortOptions);
                   setShowLocationFilter(false);
                 }}
-                className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm hover:bg-muted"
+                className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
               >
                 <ArrowUpDown className="h-4 w-4" />
                 Sort: {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
@@ -633,8 +633,8 @@ export function ResidencyList() {
             <button
               onClick={() => setAggregateByCompany(!aggregateByCompany)}
               className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${aggregateByCompany
-                  ? "border-blue-500 bg-blue-500/10 text-blue-500"
-                  : "border-border bg-background hover:bg-muted"
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
                 }`}
             >
               <Layers className="h-4 w-4" />
@@ -642,12 +642,12 @@ export function ResidencyList() {
             </button>
 
             {/* View toggle */}
-            <div className="flex items-center rounded-full border border-border bg-background p-0.5">
+            <div className="flex items-center rounded-full border border-zinc-300 bg-white p-0.5 dark:border-zinc-600 dark:bg-zinc-800">
               <button
                 onClick={() => setViewMode("cards")}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${viewMode === "cards"
-                    ? "bg-muted font-medium"
-                    : "hover:bg-muted/50"
+                    ? "bg-zinc-200 font-medium text-zinc-900 dark:bg-zinc-600 dark:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-700"
                   }`}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -656,8 +656,8 @@ export function ResidencyList() {
               <button
                 onClick={() => setViewMode("table")}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors ${viewMode === "table"
-                    ? "bg-muted font-medium"
-                    : "hover:bg-muted/50"
+                    ? "bg-zinc-200 font-medium text-zinc-900 dark:bg-zinc-600 dark:text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-700"
                   }`}
               >
                 <Table className="h-4 w-4" />
@@ -670,7 +670,7 @@ export function ResidencyList() {
               <button
                 key={location}
                 onClick={() => toggleLocation(location)}
-                className="flex items-center gap-1 rounded-full border border-green-500 bg-green-500/10 px-3 py-1.5 text-sm text-green-500"
+                className="flex items-center gap-1 rounded-full border border-green-600 bg-green-600 px-3 py-1.5 text-sm text-white"
               >
                 {location}
                 <X className="h-3 w-3" />
