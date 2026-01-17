@@ -23,7 +23,7 @@ export async function requireAdmin(
   }
 
   // Check for isAdmin field (set via Convex dashboard)
-  if (!(user as Doc<"users"> & { isAdmin?: boolean }).isAdmin) {
+  if (!user.isAdmin) {
     throw new Error("Admin access required");
   }
 

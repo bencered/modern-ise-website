@@ -21,7 +21,7 @@ export const isAdmin = query({
       return { isAdmin: false };
     }
 
-    const isAdmin = (user as Doc<"users"> & { isAdmin?: boolean }).isAdmin ?? false;
+    const isAdmin = user.isAdmin ?? false;
     return { isAdmin };
   },
 });
@@ -42,7 +42,7 @@ export const checkAdminStatus = internalQuery({
       throw new ConvexError("User not found");
     }
 
-    const isAdmin = (user as Doc<"users"> & { isAdmin?: boolean }).isAdmin ?? false;
+    const isAdmin = user.isAdmin ?? false;
     if (!isAdmin) {
       throw new ConvexError("Admin access required");
     }

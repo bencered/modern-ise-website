@@ -383,7 +383,7 @@ export const deleteTestimonial = mutation({
 
     // Check if admin or owner
     const user = await ctx.db.get(userId);
-    const isAdmin = (user as typeof user & { isAdmin?: boolean })?.isAdmin;
+    const isAdmin = user?.isAdmin;
 
     if (!isAdmin && testimonial.userId !== userId) {
       throw new Error("You can only delete your own testimonials");
