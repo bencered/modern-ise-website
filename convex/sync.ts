@@ -2,8 +2,6 @@
 
 import { internalAction, action } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
-import { validateAdminPassword } from "./admin";
 
 const BASE_URL = "https://sheryl9652.preview.softr.app/v1/datasource/airtable/1a4e99c5-7a8f-4323-b0d5-aaa96a38141c";
 
@@ -171,11 +169,10 @@ export const syncAllResidencies = internalAction({
 
 // Public action for manual sync from admin panel
 export const triggerSync = action({
-  args: {
-    adminPassword: v.string(),
-  },
-  handler: async (ctx, args): Promise<{ synced: number }> => {
-    validateAdminPassword(args.adminPassword);
+  args: {},
+  handler: async (ctx): Promise<{ synced: number }> => {
+    // Verify admin status via internal query
+    await ctx.runQuery(internal.admin.checkAdminStatus, {});
     const result = await ctx.runAction(internal.sync.syncAllResidencies, {});
     return result;
   },

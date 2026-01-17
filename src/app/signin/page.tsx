@@ -19,7 +19,11 @@ export default function SignInPage() {
   const { signIn } = useAuthActions();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirectParam = searchParams.get("redirect") || "/";
+  // Prevent open redirect - only allow relative paths
+  const redirect = redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+    ? redirectParam
+    : "/";
   const [step, setStep] = useState<SignInStep>("email");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

@@ -1,6 +1,23 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Doc } from "./_generated/dataModel";
+import { requireAdmin } from "./lib/requireAdmin";
+
+// Sanitize testimonial for public consumption - never expose userId
+function sanitizeTestimonial(t: Doc<"testimonials">) {
+  return {
+    _id: t._id,
+    content: t.content,
+    rating: t.rating,
+    companyId: t.companyId,
+    authorName: t.isAnonymous ? "Anonymous" : t.authorName,
+    isAnonymous: t.isAnonymous ?? false,
+    isFeatured: t.isFeatured,
+    residencyYear: t.residencyYear,
+    createdAt: t.createdAt,
+  };
+}
 
 // Get all approved testimonials (auth required to view)
 // Redacts user info for anonymous testimonials
@@ -44,6 +61,7 @@ export const listApproved = query({
 });
 
 // Get approved testimonials for a company (auth required to view)
+// Returns sanitized data - never exposes userId
 export const listByCompany = query({
   args: { companyId: v.id("companies") },
   handler: async (ctx, args) => {
@@ -57,11 +75,15 @@ export const listByCompany = query({
       )
       .collect();
 
-    return testimonials.sort((a, b) => b.createdAt - a.createdAt);
+    // Sanitize to prevent data leaks (userId, real name for anonymous)
+    return testimonials
+      .map(sanitizeTestimonial)
+      .sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
 // Get most recent approved testimonial for a company
+// Returns sanitized data - never exposes userId
 export const getFeaturedByCompany = query({
   args: { companyId: v.id("companies") },
   handler: async (ctx, args) => {
@@ -77,18 +99,17 @@ export const getFeaturedByCompany = query({
 
     if (testimonials.length === 0) return null;
 
-    // Return most recent
-    return testimonials.sort((a, b) => b.createdAt - a.createdAt)[0];
+    // Return most recent, sanitized
+    const mostRecent = testimonials.sort((a, b) => b.createdAt - a.createdAt)[0];
+    return sanitizeTestimonial(mostRecent);
   },
 });
 
 // Admin: get all pending testimonials
 export const listPending = query({
-  args: { adminPassword: v.string() },
-  handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
 
     const testimonials = await ctx.db
       .query("testimonials")
@@ -110,13 +131,10 @@ export const listPending = query({
 // Admin: get all testimonials (for the admin panel)
 export const listAll = query({
   args: {
-    adminPassword: v.string(),
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     let testimonials;
     if (args.status) {
@@ -194,19 +212,30 @@ export const submit = mutation({
       throw new Error("Rating must be between 1 and 5");
     }
 
-    // Check for existing pending testimonial from this user for this company
-    const existingPending = await ctx.db
+    // Validate residencyYear length (server-side validation to match client-side maxLength)
+    if (args.residencyYear && args.residencyYear.length > 20) {
+      throw new Error("Residency year must be 20 characters or less");
+    }
+
+    // Global rate limiting: max 5 pending testimonials per user
+    const userPendingTestimonials = await ctx.db
       .query("testimonials")
       .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("companyId"), args.companyId),
-          q.eq(q.field("status"), "pending")
-        )
-      )
-      .first();
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .collect();
 
-    if (existingPending) {
+    if (userPendingTestimonials.length >= 5) {
+      throw new Error(
+        "You have too many pending testimonials. Please wait for some to be reviewed before submitting more."
+      );
+    }
+
+    // Check for existing pending testimonial from this user for this company
+    const existingPendingForCompany = userPendingTestimonials.find(
+      (t) => t.companyId === args.companyId
+    );
+
+    if (existingPendingForCompany) {
       throw new Error(
         "You already have a pending testimonial for this company"
       );
@@ -241,13 +270,10 @@ export const submit = mutation({
 // Admin: approve testimonial
 export const approve = mutation({
   args: {
-    adminPassword: v.string(),
     testimonialId: v.id("testimonials"),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const testimonial = await ctx.db.get(args.testimonialId);
     if (!testimonial) {
@@ -266,13 +292,10 @@ export const approve = mutation({
 // Admin: reject testimonial
 export const reject = mutation({
   args: {
-    adminPassword: v.string(),
     testimonialId: v.id("testimonials"),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const testimonial = await ctx.db.get(args.testimonialId);
     if (!testimonial) {
@@ -290,13 +313,10 @@ export const reject = mutation({
 // Admin: set as featured for company (only one featured per company)
 export const setFeatured = mutation({
   args: {
-    adminPassword: v.string(),
     testimonialId: v.id("testimonials"),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const testimonial = await ctx.db.get(args.testimonialId);
     if (!testimonial) {
@@ -329,13 +349,10 @@ export const setFeatured = mutation({
 // Admin: unset featured
 export const unsetFeatured = mutation({
   args: {
-    adminPassword: v.string(),
     testimonialId: v.id("testimonials"),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const testimonial = await ctx.db.get(args.testimonialId);
     if (!testimonial) {
@@ -352,30 +369,23 @@ export const unsetFeatured = mutation({
 export const deleteTestimonial = mutation({
   args: {
     testimonialId: v.id("testimonials"),
-    adminPassword: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const testimonial = await ctx.db.get(args.testimonialId);
-    if (!testimonial) {
-      throw new Error("Testimonial not found");
-    }
-
-    // Check if admin
-    if (args.adminPassword) {
-      if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-        throw new Error("Invalid admin password");
-      }
-      await ctx.db.delete(args.testimonialId);
-      return { success: true };
-    }
-
-    // Check if user owns this testimonial
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Authentication required");
     }
 
-    if (testimonial.userId !== userId) {
+    const testimonial = await ctx.db.get(args.testimonialId);
+    if (!testimonial) {
+      throw new Error("Testimonial not found");
+    }
+
+    // Check if admin or owner
+    const user = await ctx.db.get(userId);
+    const isAdmin = (user as typeof user & { isAdmin?: boolean })?.isAdmin;
+
+    if (!isAdmin && testimonial.userId !== userId) {
       throw new Error("You can only delete your own testimonials");
     }
 

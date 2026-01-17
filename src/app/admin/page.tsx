@@ -1,73 +1,31 @@
 "use client";
 
-import { useState, useCallback, DragEvent, useEffect } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
+import { useState, useCallback, DragEvent } from "react";
+import { useQuery, useMutation, useAction, useConvexAuth } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut, Star, CheckCircle, XCircle, Sparkles } from "lucide-react";
+import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut, Star, CheckCircle, XCircle, Sparkles, Loader2, ShieldX } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useAuthActions } from "@convex-dev/auth/react";
 
-const ADMIN_PASSWORD_KEY = "admin_password";
-
-function useAdminPassword() {
-  const [password, setPassword] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(ADMIN_PASSWORD_KEY);
-    if (stored) {
-      setPassword(stored);
-    }
-  }, []);
-
-  const login = (pwd: string) => {
-    localStorage.setItem(ADMIN_PASSWORD_KEY, pwd);
-    setPassword(pwd);
-  };
-
-  const logout = () => {
-    localStorage.removeItem(ADMIN_PASSWORD_KEY);
-    setPassword(null);
-  };
-
-  return { password, login, logout, isLoggedIn: !!password };
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
 }
 
-function LoginScreen({ onLogin }: { onLogin: (password: string) => void }) {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const verifyPassword = useMutation(api.admin.verifyPassword);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!password.trim()) {
-      setError("Password is required");
-      return;
-    }
-    setLoading(true);
-    setError("");
-
-    try {
-      await verifyPassword({ password });
-      onLogin(password);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Invalid password";
-      // Extract the actual error message from ConvexError
-      if (message.includes("Too many login attempts")) {
-        setError(message);
-      } else {
-        setError("Invalid password");
-      }
-      setLoading(false);
-    }
-  }
-
+function NotAuthenticatedScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="w-full max-w-md">
@@ -77,34 +35,42 @@ function LoginScreen({ onLogin }: { onLogin: (password: string) => void }) {
           </div>
           <CardTitle>Admin Access</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Enter the admin password to continue
+            Please sign in to access the admin panel
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="password"
-                placeholder="Enter admin password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
-              {error && (
-                <p className="text-sm text-red-500">{error}</p>
-              )}
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Login"
-              )}
-            </Button>
-          </form>
+          <Button asChild className="w-full">
+            <Link href="/signin?redirect=/admin">Sign In</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function NotAuthorizedScreen() {
+  const { signOut } = useAuthActions();
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+            <ShieldX className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <CardTitle>Access Denied</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            You don&apos;t have admin access. Contact an administrator if you believe this is an error.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Go Home</Link>
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => signOut()}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
         </CardContent>
       </Card>
     </div>
@@ -229,7 +195,7 @@ function CompanyCard({
   );
 }
 
-function CompanyManager({ adminPassword, onAuthError }: { adminPassword: string; onAuthError: () => void }) {
+function CompanyManager() {
   const companies = useQuery(api.residencies.listCompanies);
   const generateUploadUrl = useMutation(api.mutations.generateUploadUrl);
   const updateCompanyImage = useMutation(api.mutations.updateCompanyImage);
@@ -242,19 +208,16 @@ function CompanyManager({ adminPassword, onAuthError }: { adminPassword: string;
   async function handleImageUpload(companyId: Id<"companies">, file: File) {
     setUploading(companyId);
     try {
-      const uploadUrl = await generateUploadUrl({ adminPassword });
+      const uploadUrl = await generateUploadUrl({});
       const result = await fetch(uploadUrl, {
         method: "POST",
         headers: { "Content-Type": file.type },
         body: file,
       });
       const { storageId } = await result.json();
-      await updateCompanyImage({ adminPassword, companyId, imageId: storageId });
+      await updateCompanyImage({ companyId, imageId: storageId });
     } catch (error) {
       console.error("Failed to upload image:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setUploading(null);
     }
@@ -272,14 +235,11 @@ function CompanyManager({ adminPassword, onAuthError }: { adminPassword: string;
     try {
       // First selected is the target, rest are sources
       const [targetId, ...sourceIds] = selectedCompanies;
-      await mergeCompanies({ adminPassword, targetId, sourceIds });
+      await mergeCompanies({ targetId, sourceIds });
       setSelectedCompanies([]);
       setMergeMode(false);
     } catch (error) {
       console.error("Failed to merge companies:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setMerging(false);
     }
@@ -349,7 +309,7 @@ function CompanyManager({ adminPassword, onAuthError }: { adminPassword: string;
   );
 }
 
-function ResidencyManager({ adminPassword, onAuthError }: { adminPassword: string; onAuthError: () => void }) {
+function ResidencyManager() {
   const residencies = useQuery(api.residencies.list);
   const updateDescription = useMutation(api.mutations.updateResidencyDescription);
   const updateLocation = useMutation(api.mutations.updateResidencyLocation);
@@ -362,13 +322,10 @@ function ResidencyManager({ adminPassword, onAuthError }: { adminPassword: strin
   async function handleSaveDescription(residencyId: Id<"residencies">) {
     setSaving(true);
     try {
-      await updateDescription({ adminPassword, residencyId, description: editDescValue });
+      await updateDescription({ residencyId, description: editDescValue });
       setEditingDescId(null);
     } catch (error) {
       console.error("Failed to save description:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setSaving(false);
     }
@@ -377,13 +334,10 @@ function ResidencyManager({ adminPassword, onAuthError }: { adminPassword: strin
   async function handleSaveLocation(residencyId: Id<"residencies">) {
     setSaving(true);
     try {
-      await updateLocation({ adminPassword, residencyId, location: editLocValue });
+      await updateLocation({ residencyId, location: editLocValue });
       setEditingLocId(null);
     } catch (error) {
       console.error("Failed to save location:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setSaving(false);
     }
@@ -527,7 +481,7 @@ function ResidencyManager({ adminPassword, onAuthError }: { adminPassword: strin
   );
 }
 
-function SyncManager({ adminPassword, onAuthError }: { adminPassword: string; onAuthError: () => void }) {
+function SyncManager() {
   const triggerSync = useAction(api.sync.triggerSync);
   const [syncing, setSyncing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -536,16 +490,11 @@ function SyncManager({ adminPassword, onAuthError }: { adminPassword: string; on
     setSyncing(true);
     setResult(null);
     try {
-      const data = await triggerSync({ adminPassword });
+      const data = await triggerSync({});
       setResult(`Synced ${data.synced} residencies`);
     } catch (error) {
       console.error("Sync error:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-        setResult("Authentication failed");
-      } else {
-        setResult("Failed to sync");
-      }
+      setResult("Failed to sync");
     } finally {
       setSyncing(false);
     }
@@ -584,9 +533,9 @@ function SyncManager({ adminPassword, onAuthError }: { adminPassword: string; on
   );
 }
 
-function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: string; onAuthError: () => void }) {
+function TestimonialManager() {
   const [statusFilter, setStatusFilter] = useState<string>("pending");
-  const testimonials = useQuery(api.testimonials.listAll, { adminPassword, status: statusFilter || undefined });
+  const testimonials = useQuery(api.testimonials.listAll, { status: statusFilter || undefined });
   const approve = useMutation(api.testimonials.approve);
   const reject = useMutation(api.testimonials.reject);
   const setFeatured = useMutation(api.testimonials.setFeatured);
@@ -597,12 +546,9 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
   async function handleApprove(testimonialId: Id<"testimonials">) {
     setProcessing(testimonialId);
     try {
-      await approve({ adminPassword, testimonialId });
+      await approve({ testimonialId });
     } catch (error) {
       console.error("Failed to approve:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setProcessing(null);
     }
@@ -611,12 +557,9 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
   async function handleReject(testimonialId: Id<"testimonials">) {
     setProcessing(testimonialId);
     try {
-      await reject({ adminPassword, testimonialId });
+      await reject({ testimonialId });
     } catch (error) {
       console.error("Failed to reject:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setProcessing(null);
     }
@@ -625,12 +568,9 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
   async function handleSetFeatured(testimonialId: Id<"testimonials">) {
     setProcessing(testimonialId);
     try {
-      await setFeatured({ adminPassword, testimonialId });
+      await setFeatured({ testimonialId });
     } catch (error) {
       console.error("Failed to set featured:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setProcessing(null);
     }
@@ -639,12 +579,9 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
   async function handleUnsetFeatured(testimonialId: Id<"testimonials">) {
     setProcessing(testimonialId);
     try {
-      await unsetFeatured({ adminPassword, testimonialId });
+      await unsetFeatured({ testimonialId });
     } catch (error) {
       console.error("Failed to unset featured:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setProcessing(null);
     }
@@ -654,12 +591,9 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
     if (!confirm("Are you sure you want to delete this testimonial?")) return;
     setProcessing(testimonialId);
     try {
-      await deleteTestimonial({ adminPassword, testimonialId });
+      await deleteTestimonial({ testimonialId });
     } catch (error) {
       console.error("Failed to delete:", error);
-      if (error instanceof Error && error.message.includes("Invalid admin password")) {
-        onAuthError();
-      }
     } finally {
       setProcessing(null);
     }
@@ -842,15 +776,24 @@ function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: str
 }
 
 export default function AdminPage() {
-  const { password, login, logout, isLoggedIn } = useAdminPassword();
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { signOut } = useAuthActions();
+  const adminStatus = useQuery(api.admin.isAdmin, isAuthenticated ? {} : "skip");
 
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={login} />;
+  // Loading state
+  if (authLoading || (isAuthenticated && adminStatus === undefined)) {
+    return <LoadingScreen />;
   }
 
-  const handleAuthError = () => {
-    logout();
-  };
+  // Not authenticated
+  if (!isAuthenticated) {
+    return <NotAuthenticatedScreen />;
+  }
+
+  // Not an admin
+  if (!adminStatus?.isAdmin) {
+    return <NotAuthorizedScreen />;
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-12">
@@ -862,9 +805,9 @@ export default function AdminPage() {
               Manage company logos and residency information
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={logout}>
+          <Button variant="outline" size="sm" onClick={() => signOut()}>
             <LogOut className="mr-2 h-4 w-4" />
-            Logout
+            Sign Out
           </Button>
         </div>
 
@@ -877,19 +820,19 @@ export default function AdminPage() {
           </TabsList>
 
           <TabsContent value="companies">
-            <CompanyManager adminPassword={password!} onAuthError={handleAuthError} />
+            <CompanyManager />
           </TabsContent>
 
           <TabsContent value="residencies">
-            <ResidencyManager adminPassword={password!} onAuthError={handleAuthError} />
+            <ResidencyManager />
           </TabsContent>
 
           <TabsContent value="testimonials">
-            <TestimonialManager adminPassword={password!} onAuthError={handleAuthError} />
+            <TestimonialManager />
           </TabsContent>
 
           <TabsContent value="sync">
-            <SyncManager adminPassword={password!} onAuthError={handleAuthError} />
+            <SyncManager />
           </TabsContent>
         </Tabs>
       </div>

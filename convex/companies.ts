@@ -1,6 +1,23 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Doc } from "./_generated/dataModel";
+import { requireAdmin } from "./lib/requireAdmin";
+
+// Sanitize testimonial for public consumption - never expose userId
+function sanitizeTestimonial(t: Doc<"testimonials">) {
+  return {
+    _id: t._id,
+    content: t.content,
+    rating: t.rating,
+    companyId: t.companyId,
+    authorName: t.isAnonymous ? "Anonymous" : t.authorName,
+    isAnonymous: t.isAnonymous ?? false,
+    isFeatured: t.isFeatured,
+    residencyYear: t.residencyYear,
+    createdAt: t.createdAt,
+  };
+}
 
 // Get company by slug with image URL
 export const getBySlug = query({
@@ -45,6 +62,7 @@ export const getWithResidencies = query({
       .collect();
 
     // Get most recent approved testimonial only if user is authenticated
+    // Returns sanitized data - never exposes userId or real name for anonymous
     let featuredTestimonial = null;
     const userId = await getAuthUserId(ctx);
     if (userId) {
@@ -56,7 +74,8 @@ export const getWithResidencies = query({
         .collect();
 
       if (testimonials.length > 0) {
-        featuredTestimonial = testimonials.sort((a, b) => b.createdAt - a.createdAt)[0];
+        const mostRecent = testimonials.sort((a, b) => b.createdAt - a.createdAt)[0];
+        featuredTestimonial = sanitizeTestimonial(mostRecent);
       }
     }
 
@@ -103,7 +122,6 @@ export const listAll = query({
 // Admin: update company metadata
 export const updateDetails = mutation({
   args: {
-    adminPassword: v.string(),
     companyId: v.id("companies"),
     description: v.optional(v.string()),
     linkedinUrl: v.optional(v.string()),
@@ -114,9 +132,7 @@ export const updateDetails = mutation({
     website: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const company = await ctx.db.get(args.companyId);
     if (!company) {
@@ -148,13 +164,10 @@ export const updateDetails = mutation({
 // Get company details for admin editing
 export const getForAdmin = query({
   args: {
-    adminPassword: v.string(),
     companyId: v.id("companies"),
   },
   handler: async (ctx, args) => {
-    if (args.adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Invalid admin password");
-    }
+    await requireAdmin(ctx);
 
     const company = await ctx.db.get(args.companyId);
     if (!company) return null;

@@ -1,6 +1,6 @@
 import { internalMutation, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { validateAdminPassword } from "./admin";
+import { requireAdmin } from "./lib/requireAdmin";
 
 function slugify(name: string): string {
   return name
@@ -90,23 +90,20 @@ export const upsertResidencies = internalMutation({
 });
 
 export const generateUploadUrl = mutation({
-  args: {
-    adminPassword: v.string(),
-  },
-  handler: async (ctx, args) => {
-    validateAdminPassword(args.adminPassword);
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.storage.generateUploadUrl();
   },
 });
 
 export const updateCompanyImage = mutation({
   args: {
-    adminPassword: v.string(),
     companyId: v.id("companies"),
     imageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    validateAdminPassword(args.adminPassword);
+    await requireAdmin(ctx);
     await ctx.db.patch(args.companyId, {
       imageId: args.imageId,
     });
@@ -115,12 +112,11 @@ export const updateCompanyImage = mutation({
 
 export const updateResidencyDescription = mutation({
   args: {
-    adminPassword: v.string(),
     residencyId: v.id("residencies"),
     description: v.string(),
   },
   handler: async (ctx, args) => {
-    validateAdminPassword(args.adminPassword);
+    await requireAdmin(ctx);
     await ctx.db.patch(args.residencyId, {
       description: args.description,
     });
@@ -129,12 +125,11 @@ export const updateResidencyDescription = mutation({
 
 export const updateResidencyLocation = mutation({
   args: {
-    adminPassword: v.string(),
     residencyId: v.id("residencies"),
     location: v.string(),
   },
   handler: async (ctx, args) => {
-    validateAdminPassword(args.adminPassword);
+    await requireAdmin(ctx);
     await ctx.db.patch(args.residencyId, {
       location: args.location || undefined,
     });
@@ -143,12 +138,11 @@ export const updateResidencyLocation = mutation({
 
 export const mergeCompanies = mutation({
   args: {
-    adminPassword: v.string(),
     targetId: v.id("companies"),
     sourceIds: v.array(v.id("companies")),
   },
   handler: async (ctx, args) => {
-    validateAdminPassword(args.adminPassword);
+    await requireAdmin(ctx);
     const target = await ctx.db.get(args.targetId);
     if (!target) {
       throw new Error("Target company not found");

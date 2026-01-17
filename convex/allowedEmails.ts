@@ -1,9 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./lib/requireAdmin";
 
 export const bulkImport = mutation({
   args: {
-    adminPassword: v.string(),
     emails: v.array(
       v.object({
         email: v.string(),
@@ -11,10 +11,8 @@ export const bulkImport = mutation({
       })
     ),
   },
-  handler: async (ctx, { adminPassword, emails }) => {
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Unauthorized");
-    }
+  handler: async (ctx, { emails }) => {
+    await requireAdmin(ctx);
 
     let added = 0;
     let skipped = 0;
@@ -45,14 +43,11 @@ export const bulkImport = mutation({
 
 export const addEmail = mutation({
   args: {
-    adminPassword: v.string(),
     email: v.string(),
     name: v.string(),
   },
-  handler: async (ctx, { adminPassword, email, name }) => {
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Unauthorized");
-    }
+  handler: async (ctx, { email, name }) => {
+    await requireAdmin(ctx);
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -77,13 +72,10 @@ export const addEmail = mutation({
 
 export const removeEmail = mutation({
   args: {
-    adminPassword: v.string(),
     email: v.string(),
   },
-  handler: async (ctx, { adminPassword, email }) => {
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Unauthorized");
-    }
+  handler: async (ctx, { email }) => {
+    await requireAdmin(ctx);
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -119,13 +111,9 @@ export const isEmailAllowed = query({
 });
 
 export const listAllowedEmails = query({
-  args: {
-    adminPassword: v.string(),
-  },
-  handler: async (ctx, { adminPassword }) => {
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new Error("Unauthorized");
-    }
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
 
     return await ctx.db.query("allowedEmails").collect();
   },

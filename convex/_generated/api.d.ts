@@ -15,6 +15,7 @@ import type * as auth from "../auth.js";
 import type * as companies from "../companies.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as lib_requireAdmin from "../lib/requireAdmin.js";
 import type * as mutations from "../mutations.js";
 import type * as residencies from "../residencies.js";
 import type * as sync from "../sync.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   companies: typeof companies;
   crons: typeof crons;
   http: typeof http;
+  "lib/requireAdmin": typeof lib_requireAdmin;
   mutations: typeof mutations;
   residencies: typeof residencies;
   sync: typeof sync;
