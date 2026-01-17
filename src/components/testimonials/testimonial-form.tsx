@@ -137,11 +137,10 @@ export function TestimonialForm({ companyId, companyName }: TestimonialFormProps
                   className="p-1 hover:scale-110 transition-transform"
                 >
                   <Star
-                    className={`h-6 w-6 ${
-                      i <= (hoverRating ?? rating ?? 0)
+                    className={`h-6 w-6 ${i <= (hoverRating ?? rating ?? 0)
                         ? "fill-yellow-400 text-yellow-400"
                         : "text-muted-foreground/30"
-                    }`}
+                      }`}
                   />
                 </button>
               ))}
@@ -177,7 +176,7 @@ export function TestimonialForm({ companyId, companyName }: TestimonialFormProps
                 Post anonymously
               </label>
               <p className="text-xs text-muted-foreground">
-                Your name will be hidden from other users, but the ISE team can still see who submitted it.
+                Your name will be hidden from other users, but administrators can still see who submitted it.
               </p>
             </div>
           </div>
