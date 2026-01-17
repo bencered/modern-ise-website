@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut } from "lucide-react";
+import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut, Star, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import Image from "next/image";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -584,6 +584,263 @@ function SyncManager({ adminPassword, onAuthError }: { adminPassword: string; on
   );
 }
 
+function TestimonialManager({ adminPassword, onAuthError }: { adminPassword: string; onAuthError: () => void }) {
+  const [statusFilter, setStatusFilter] = useState<string>("pending");
+  const testimonials = useQuery(api.testimonials.listAll, { adminPassword, status: statusFilter || undefined });
+  const approve = useMutation(api.testimonials.approve);
+  const reject = useMutation(api.testimonials.reject);
+  const setFeatured = useMutation(api.testimonials.setFeatured);
+  const unsetFeatured = useMutation(api.testimonials.unsetFeatured);
+  const deleteTestimonial = useMutation(api.testimonials.deleteTestimonial);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  async function handleApprove(testimonialId: Id<"testimonials">) {
+    setProcessing(testimonialId);
+    try {
+      await approve({ adminPassword, testimonialId });
+    } catch (error) {
+      console.error("Failed to approve:", error);
+      if (error instanceof Error && error.message.includes("Invalid admin password")) {
+        onAuthError();
+      }
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function handleReject(testimonialId: Id<"testimonials">) {
+    setProcessing(testimonialId);
+    try {
+      await reject({ adminPassword, testimonialId });
+    } catch (error) {
+      console.error("Failed to reject:", error);
+      if (error instanceof Error && error.message.includes("Invalid admin password")) {
+        onAuthError();
+      }
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function handleSetFeatured(testimonialId: Id<"testimonials">) {
+    setProcessing(testimonialId);
+    try {
+      await setFeatured({ adminPassword, testimonialId });
+    } catch (error) {
+      console.error("Failed to set featured:", error);
+      if (error instanceof Error && error.message.includes("Invalid admin password")) {
+        onAuthError();
+      }
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function handleUnsetFeatured(testimonialId: Id<"testimonials">) {
+    setProcessing(testimonialId);
+    try {
+      await unsetFeatured({ adminPassword, testimonialId });
+    } catch (error) {
+      console.error("Failed to unset featured:", error);
+      if (error instanceof Error && error.message.includes("Invalid admin password")) {
+        onAuthError();
+      }
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function handleDelete(testimonialId: Id<"testimonials">) {
+    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+    setProcessing(testimonialId);
+    try {
+      await deleteTestimonial({ adminPassword, testimonialId });
+    } catch (error) {
+      console.error("Failed to delete:", error);
+      if (error instanceof Error && error.message.includes("Invalid admin password")) {
+        onAuthError();
+      }
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  if (!testimonials) {
+    return <div className="text-muted-foreground">Loading testimonials...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <span className="text-sm font-medium">Filter:</span>
+        <div className="flex gap-2">
+          {["pending", "approved", "rejected", ""].map((status) => (
+            <Button
+              key={status || "all"}
+              size="sm"
+              variant={statusFilter === status ? "default" : "outline"}
+              onClick={() => setStatusFilter(status)}
+            >
+              {status || "All"}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {testimonials.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              No {statusFilter || ""} testimonials found.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {testimonials.map((testimonial) => (
+            <Card key={testimonial._id} className={testimonial.isFeatured ? "border-green-500/50" : ""}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {testimonial.company?.name || "Unknown Company"}
+                      {testimonial.isFeatured && (
+                        <Badge className="bg-green-500 text-white">Featured</Badge>
+                      )}
+                    </CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm text-muted-foreground">
+                        by {testimonial.authorName}
+                      </span>
+                      {testimonial.residencyYear && (
+                        <Badge variant="secondary" className="text-xs">
+                          {testimonial.residencyYear}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Badge
+                    variant={
+                      testimonial.status === "approved"
+                        ? "default"
+                        : testimonial.status === "rejected"
+                        ? "destructive"
+                        : "secondary"
+                    }
+                  >
+                    {testimonial.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm">{testimonial.content}</p>
+
+                {testimonial.rating && (
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i <= testimonial.rating!
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {testimonial.status === "pending" && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleApprove(testimonial._id)}
+                        disabled={processing === testimonial._id}
+                      >
+                        {processing === testimonial._id ? (
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                        )}
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleReject(testimonial._id)}
+                        disabled={processing === testimonial._id}
+                      >
+                        {processing === testimonial._id ? (
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <XCircle className="mr-2 h-4 w-4" />
+                        )}
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                  {testimonial.status === "approved" && (
+                    <>
+                      {testimonial.isFeatured ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUnsetFeatured(testimonial._id)}
+                          disabled={processing === testimonial._id}
+                        >
+                          {processing === testimonial._id ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                          )}
+                          Unset Featured
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSetFeatured(testimonial._id)}
+                          disabled={processing === testimonial._id}
+                        >
+                          {processing === testimonial._id ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                          )}
+                          Set Featured
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-500 hover:text-red-600"
+                    onClick={() => handleDelete(testimonial._id)}
+                    disabled={processing === testimonial._id}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Submitted {new Date(testimonial.createdAt).toLocaleDateString("en-IE", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { password, login, logout, isLoggedIn } = useAdminPassword();
 
@@ -615,6 +872,7 @@ export default function AdminPage() {
           <TabsList>
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="residencies">Residencies</TabsTrigger>
+            <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
             <TabsTrigger value="sync">Sync</TabsTrigger>
           </TabsList>
 
@@ -624,6 +882,10 @@ export default function AdminPage() {
 
           <TabsContent value="residencies">
             <ResidencyManager adminPassword={password!} onAuthError={handleAuthError} />
+          </TabsContent>
+
+          <TabsContent value="testimonials">
+            <TestimonialManager adminPassword={password!} onAuthError={handleAuthError} />
           </TabsContent>
 
           <TabsContent value="sync">

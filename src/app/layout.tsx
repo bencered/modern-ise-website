@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theming/theme-provider";
 import { ConvexClientProvider } from "@/components/convex-provider";
@@ -29,22 +30,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`
-            ${geistSans.variable} 
-            ${geistMono.variable} 
-            antialiased font-mono [background-image:radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.6)_1px,transparent_0)] [background-size:30px_30px] dark:[background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)]`}
-      >
-        <ConvexClientProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-            <Navbar />
-            {children}
-            <Footer />
-            <Analytics />
-          </ThemeProvider>
-        </ConvexClientProvider>
-      </body>
-    </html >
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`
+              ${geistSans.variable}
+              ${geistMono.variable}
+              antialiased font-mono [background-image:radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.6)_1px,transparent_0)] [background-size:30px_30px] dark:[background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.3)_1px,transparent_0)]`}
+        >
+          <ConvexClientProvider>
+            <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+              <Navbar />
+              {children}
+              <Footer />
+              <Analytics />
+            </ThemeProvider>
+          </ConvexClientProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

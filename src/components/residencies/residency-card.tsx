@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BriefcaseBusiness, Building2, Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface Company {
   _id: string;
@@ -70,7 +71,27 @@ export function ResidencyCard({ residency, isSelected, onClick, personalRating, 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            {residency.company?.imageUrl ? (
+            {residency.company?.slug ? (
+              <Link
+                href={`/companies/${residency.company.slug}`}
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0"
+              >
+                {residency.company?.imageUrl ? (
+                  <Image
+                    src={residency.company.imageUrl}
+                    alt={companyName}
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-lg object-cover transition-opacity hover:opacity-80"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted transition-colors hover:bg-muted/80">
+                    <Building2 className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
+              </Link>
+            ) : residency.company?.imageUrl ? (
               <Image
                 src={residency.company.imageUrl}
                 alt={companyName}
@@ -84,7 +105,17 @@ export function ResidencyCard({ residency, isSelected, onClick, personalRating, 
               </div>
             )}
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h3 className="line-clamp-2 break-all font-semibold leading-tight">{companyName}</h3>
+              {residency.company?.slug ? (
+                <Link
+                  href={`/companies/${residency.company.slug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:underline"
+                >
+                  <h3 className="line-clamp-2 break-all font-semibold leading-tight">{companyName}</h3>
+                </Link>
+              ) : (
+                <h3 className="line-clamp-2 break-all font-semibold leading-tight">{companyName}</h3>
+              )}
               <p className="line-clamp-2 break-all text-sm text-muted-foreground">
                 {residency.residencyTitle}
               </p>

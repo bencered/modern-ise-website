@@ -1,4 +1,6 @@
 import { ResidencyList } from "@/components/residencies/residency-list";
+import { preloadQuery } from "convex/nextjs";
+import { api } from "../../../convex/_generated/api";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -17,7 +19,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ResidenciesPage() {
+// Cache for 5 minutes, revalidate in background
+export const revalidate = 300;
+
+export default async function ResidenciesPage() {
+  const preloadedResidencies = await preloadQuery(api.residencies.list);
+
   return (
     <main className="min-h-screen px-4 pt-24 pb-8 md:px-8 lg:px-16">
       <div className="mx-auto max-w-8xl">
@@ -29,7 +36,7 @@ export default function ResidenciesPage() {
             Browse open positions from our industry partners
           </p>
         </div>
-        <ResidencyList />
+        <ResidencyList preloadedResidencies={preloadedResidencies} />
       </div>
     </main>
   );

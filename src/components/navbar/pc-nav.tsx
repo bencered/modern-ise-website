@@ -15,6 +15,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { ThemeSwapButton } from "../theming/theme-swap-button";
+import { AuthStatus } from "./auth-status";
 
 export function PcNavbar() {
   return (
@@ -43,11 +44,20 @@ export function PcNavbar() {
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <Link href="/testimonials" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                Testimonials
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
 
       <div className="ml-auto flex items-center gap-3">
         <ThemeSwapButton />
+        <AuthStatus />
         <a
           href="https://github.com/bencered/modern-ise-website"
           target="_blank"

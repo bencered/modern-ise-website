@@ -175,17 +175,28 @@ export async function GET(request: NextRequest) {
     // Paginate
     const paginated = filtered.slice(0, limit);
 
+    // Cache headers - 5 minutes public cache, 1 hour stale-while-revalidate
+    const cacheHeaders = {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+    };
+
     // Return based on format
     if (format === "markdown") {
       return new NextResponse(formatResidenciesMarkdown(paginated), {
-        headers: { "Content-Type": "text/markdown; charset=utf-8" },
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          ...cacheHeaders,
+        },
       });
     }
 
-    return NextResponse.json({
-      data: paginated.map(formatResidencyForApi),
-      meta: { total: filtered.length, returned: paginated.length },
-    });
+    return NextResponse.json(
+      {
+        data: paginated.map(formatResidencyForApi),
+        meta: { total: filtered.length, returned: paginated.length },
+      },
+      { headers: cacheHeaders }
+    );
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

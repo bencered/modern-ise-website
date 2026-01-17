@@ -1,16 +1,20 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
     const residencies = await ctx.db.query("residencies").collect();
+    const userId = await getAuthUserId(ctx);
 
     // Fetch company data for each residency
     const residenciesWithCompanies = await Promise.all(
       residencies.map(async (residency) => {
         let company = null;
         let imageUrl = null;
+        let featuredTestimonial = null;
+
         if (residency.companyId) {
           const companyData = await ctx.db.get(residency.companyId);
           if (companyData) {
@@ -18,10 +22,31 @@ export const list = query({
             if (companyData.imageId) {
               imageUrl = await ctx.storage.getUrl(companyData.imageId);
             }
+
+            // Get most recent approved testimonial only if user is authenticated
+            if (userId) {
+              const testimonials = await ctx.db
+                .query("testimonials")
+                .withIndex("by_company_status", (q) =>
+                  q.eq("companyId", residency.companyId!).eq("status", "approved")
+                )
+                .collect();
+
+              if (testimonials.length > 0) {
+                // Get most recent one
+                const mostRecent = testimonials.sort((a, b) => b.createdAt - a.createdAt)[0];
+                featuredTestimonial = {
+                  content: mostRecent.content,
+                  authorName: mostRecent.authorName,
+                  rating: mostRecent.rating,
+                };
+              }
+            }
+
             company = { ...companyData, imageUrl };
           }
         }
-        return { ...residency, company };
+        return { ...residency, company, featuredTestimonial };
       })
     );
 

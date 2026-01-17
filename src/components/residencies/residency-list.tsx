@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useQuery } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Preloaded } from "convex/react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -52,6 +53,12 @@ interface Company {
   website?: string;
 }
 
+interface FeaturedTestimonial {
+  content: string;
+  authorName: string;
+  rating?: number;
+}
+
 interface Residency {
   _id: Id<"residencies">;
   name: string;
@@ -65,6 +72,7 @@ interface Residency {
   location?: string;
   company: Company | null;
   createdAt: string;
+  featuredTestimonial?: FeaturedTestimonial | null;
 }
 
 // localStorage helpers for personal ratings
@@ -253,7 +261,11 @@ function ResidencyTable({ items, selectedResidencyId, onSelect, personalRatings,
   );
 }
 
-export function ResidencyList() {
+interface ResidencyListProps {
+  preloadedResidencies: Preloaded<typeof api.residencies.list>;
+}
+
+export function ResidencyList({ preloadedResidencies }: ResidencyListProps) {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedResidencyId, setSelectedResidencyId] = useState<Id<"residencies"> | null>(null);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -288,8 +300,8 @@ export function ResidencyList() {
     setPersonalRatings(getPersonalRatings());
   }, []);
 
-  // Fetch all residencies once
-  const allResidencies = useQuery(api.residencies.list);
+  // Use preloaded data (fetched server-side, cached by Next.js)
+  const allResidencies = usePreloadedQuery(preloadedResidencies);
 
   // Get flat list of residency IDs for keyboard navigation
   const navigationIds = useMemo((): Id<"residencies">[] => {
@@ -515,8 +527,8 @@ export function ResidencyList() {
       <div className="flex-1 min-w-0">
         {/* Filters */}
         <div className="flex flex-col gap-3 pb-4">
-          {/* Tabs */}
-          <Tabs value={selectedType} onValueChange={setSelectedType}>
+          {/* Tabs - no active state until prefs loaded to prevent flash */}
+          <Tabs value={prefsLoaded ? selectedType : ""} onValueChange={setSelectedType}>
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
               {RESIDENCY_TYPES.map((type) => (
                 <TabsTrigger

@@ -13,7 +13,9 @@ import {
   FileText,
   MapPin,
   Star,
+  Quote,
 } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 
 // localStorage helpers for personal ratings
@@ -48,6 +50,12 @@ interface Company {
   website?: string;
 }
 
+interface FeaturedTestimonial {
+  content: string;
+  authorName: string;
+  rating?: number;
+}
+
 interface Residency {
   _id: string;
   name: string;
@@ -61,6 +69,7 @@ interface Residency {
   location?: string;
   company: Company | null;
   createdAt: string;
+  featuredTestimonial?: FeaturedTestimonial | null;
 }
 
 interface ResidencySidebarProps {
@@ -153,7 +162,23 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, onRating
 
       {/* Header */}
       <div className="flex items-start gap-4 pr-8">
-        {residency.company?.imageUrl ? (
+        {residency.company?.slug ? (
+          <Link href={`/companies/${residency.company.slug}`} className="shrink-0">
+            {residency.company?.imageUrl ? (
+              <Image
+                src={residency.company.imageUrl}
+                alt={companyName}
+                width={56}
+                height={56}
+                className="h-14 w-14 rounded-xl object-cover transition-opacity hover:opacity-80"
+              />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-muted transition-colors hover:bg-muted/80">
+                <Building2 className="h-7 w-7 text-muted-foreground" />
+              </div>
+            )}
+          </Link>
+        ) : residency.company?.imageUrl ? (
           <Image
             src={residency.company.imageUrl}
             alt={companyName}
@@ -167,9 +192,17 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, onRating
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h2 className="text-xl font-semibold leading-tight">
-            {companyName}
-          </h2>
+          {residency.company?.slug ? (
+            <Link href={`/companies/${residency.company.slug}`} className="hover:underline">
+              <h2 className="text-xl font-semibold leading-tight">
+                {companyName}
+              </h2>
+            </Link>
+          ) : (
+            <h2 className="text-xl font-semibold leading-tight">
+              {companyName}
+            </h2>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             {residency.residencyTitle}
           </p>
@@ -252,6 +285,49 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, onRating
           </div>
         </div>
 
+        {/* Student Testimonial */}
+        {residency.featuredTestimonial && (
+          <>
+            <div className="h-px bg-border" />
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                Student Testimonial
+              </h3>
+
+              <div className="rounded-lg bg-muted/50 p-4">
+                <div className="flex items-start gap-3">
+                  <Quote className="h-5 w-5 shrink-0 text-muted-foreground/50" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm leading-relaxed">
+                      {residency.featuredTestimonial.content}
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-sm font-medium">
+                        — {residency.featuredTestimonial.authorName}
+                      </span>
+                      {residency.featuredTestimonial.rating && (
+                        <div className="flex items-center">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${
+                                i <= residency.featuredTestimonial!.rating!
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Description */}
         {residency.description && (
           <>
@@ -313,7 +389,7 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, onRating
 export function ResidencySidebar({ residency, onClose, onRatingChange }: ResidencySidebarProps) {
   return (
     <div
-      className={`hidden lg:block sticky top-24 h-[calc(100vh-8rem)] w-96 shrink-0 rounded-lg border bg-card transition-all duration-300 ${
+      className={`hidden lg:block sticky top-24 h-[calc(100vh-8rem)] w-[28rem] shrink-0 rounded-lg border bg-card transition-all duration-300 ${
         residency ? "opacity-100" : "opacity-50"
       }`}
     >

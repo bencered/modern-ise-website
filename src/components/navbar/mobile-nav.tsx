@@ -9,6 +9,7 @@ import Image from "next/image"
 import { Menu, Github } from "lucide-react";
 import Link from "next/link";
 import { ThemeSwapButton } from "../theming/theme-swap-button";
+import { AuthStatusMobile } from "./auth-status";
 
 export const MobileNavbar = () => {
 
@@ -40,6 +41,8 @@ export const MobileNavbar = () => {
         <div className="flex flex-col space-y-3 overflow-auto p-6">
           <Link href="/">Home</Link>
           <Link href="/residencies">Residencies</Link>
+          <Link href="/testimonials">Testimonials</Link>
+          <AuthStatusMobile />
           <a
             href="https://github.com/bencered/modern-ise-website"
             target="_blank"

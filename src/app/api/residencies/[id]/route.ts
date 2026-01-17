@@ -161,13 +161,24 @@ export async function GET(
       );
     }
 
+    // Cache headers - 5 minutes public cache, 1 hour stale-while-revalidate
+    const cacheHeaders = {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
+    };
+
     if (format === "markdown") {
       return new NextResponse(formatResidencyMarkdown(residency), {
-        headers: { "Content-Type": "text/markdown; charset=utf-8" },
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          ...cacheHeaders,
+        },
       });
     }
 
-    return NextResponse.json({ data: formatResidencyForApi(residency) });
+    return NextResponse.json(
+      { data: formatResidencyForApi(residency) },
+      { headers: cacheHeaders }
+    );
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
