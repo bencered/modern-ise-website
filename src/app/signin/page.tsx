@@ -12,8 +12,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { checkOtpRateLimitWithIp } from "./actions";
 
 type SignInStep = "email" | { email: string };
+
+// Parse error messages and return user-friendly versions
+function getErrorMessage(error: unknown, context: "email" | "code"): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  // Rate limit errors (already user-friendly)
+  if (message.includes("Too many")) {
+    return message;
+  }
+
+  // Email not on allowlist
+  if (message.includes("not authorized") || message.includes("Only ISE students")) {
+    return "This email is not registered as an ISE student. Please use your student email address.";
+  }
+
+  // Invalid or expired verification code
+  if (
+    message.includes("Invalid") ||
+    message.includes("invalid") ||
+    message.includes("expired") ||
+    message.includes("Could not verify")
+  ) {
+    return "Invalid or expired verification code. Please check the code or request a new one.";
+  }
+
+  // Email required
+  if (message.includes("Email is required")) {
+    return "Please enter your email address.";
+  }
+
+  // Network/fetch errors
+  if (message.includes("fetch") || message.includes("network") || message.includes("Network")) {
+    return "Connection error. Please check your internet and try again.";
+  }
+
+  // Resend API errors (usually JSON formatted)
+  if (message.startsWith("{") || message.includes("statusCode")) {
+    return "Failed to send verification email. Please try again later.";
+  }
+
+  // Context-specific fallbacks
+  if (context === "email") {
+    return "Failed to send verification code. Please try again.";
+  }
+
+  return "Verification failed. Please try again.";
+}
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
@@ -37,12 +85,13 @@ export default function SignInPage() {
     const email = formData.get("email") as string;
 
     try {
+      // Check rate limits before sending OTP (includes IP-based limiting)
+      await checkOtpRateLimitWithIp(email);
+
       await signIn("resend-otp", formData);
       setStep({ email });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to send verification code"
-      );
+      setError(getErrorMessage(err, "email"));
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +110,7 @@ export default function SignInPage() {
         router.push(redirect);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid verification code");
+      setError(getErrorMessage(err, "code"));
       setIsLoading(false);
     }
   };
