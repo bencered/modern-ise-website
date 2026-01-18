@@ -9,7 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut, Star, CheckCircle, XCircle, Sparkles, Loader2, ShieldX } from "lucide-react";
+import { Building2, Upload, Save, RefreshCw, Merge, Check, X, MapPin, Lock, LogOut, Star, CheckCircle, XCircle, Sparkles, Loader2, ShieldX, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -200,10 +209,23 @@ function CompanyManager() {
   const generateUploadUrl = useMutation(api.mutations.generateUploadUrl);
   const updateCompanyImage = useMutation(api.mutations.updateCompanyImage);
   const mergeCompanies = useMutation(api.mutations.mergeCompanies);
+  const createCompany = useMutation(api.mutations.createCompany);
   const [uploading, setUploading] = useState<string | null>(null);
   const [mergeMode, setMergeMode] = useState(false);
   const [selectedCompanies, setSelectedCompanies] = useState<Id<"companies">[]>([]);
   const [merging, setMerging] = useState(false);
+
+  // Create company state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [newCompany, setNewCompany] = useState({
+    name: "",
+    website: "",
+    description: "",
+    industry: "",
+    headquarters: "",
+  });
 
   async function handleImageUpload(companyId: Id<"companies">, file: File) {
     setUploading(companyId);
@@ -242,6 +264,30 @@ function CompanyManager() {
       console.error("Failed to merge companies:", error);
     } finally {
       setMerging(false);
+    }
+  }
+
+  async function handleCreateCompany() {
+    if (!newCompany.name.trim()) {
+      setCreateError("Company name is required");
+      return;
+    }
+    setCreating(true);
+    setCreateError(null);
+    try {
+      await createCompany({
+        name: newCompany.name.trim(),
+        website: newCompany.website.trim() || undefined,
+        description: newCompany.description.trim() || undefined,
+        industry: newCompany.industry.trim() || undefined,
+        headquarters: newCompany.headquarters.trim() || undefined,
+      });
+      setCreateDialogOpen(false);
+      setNewCompany({ name: "", website: "", description: "", industry: "", headquarters: "" });
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create company");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -285,10 +331,16 @@ function CompanyManager() {
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setMergeMode(true)}>
-              <Merge className="mr-2 h-4 w-4" />
-              Merge Companies
-            </Button>
+            <>
+              <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Company
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setMergeMode(true)}>
+                <Merge className="mr-2 h-4 w-4" />
+                Merge Companies
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -305,6 +357,95 @@ function CompanyManager() {
           />
         ))}
       </div>
+
+      {/* Create Company Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={(open) => {
+        setCreateDialogOpen(open);
+        if (!open) {
+          setCreateError(null);
+          setNewCompany({ name: "", website: "", description: "", industry: "", headquarters: "" });
+        }
+      }}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Company</DialogTitle>
+            <DialogDescription>
+              Add a new company manually. The company will be available for linking to residencies.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {createError && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {createError}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="company-name">Company Name *</Label>
+              <Input
+                id="company-name"
+                placeholder="e.g. Google"
+                value={newCompany.name}
+                onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-website">Website</Label>
+              <Input
+                id="company-website"
+                placeholder="e.g. https://google.com"
+                value={newCompany.website}
+                onChange={(e) => setNewCompany({ ...newCompany, website: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-headquarters">Headquarters</Label>
+              <Input
+                id="company-headquarters"
+                placeholder="e.g. Dublin, Ireland"
+                value={newCompany.headquarters}
+                onChange={(e) => setNewCompany({ ...newCompany, headquarters: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-industry">Industry</Label>
+              <Input
+                id="company-industry"
+                placeholder="e.g. Technology"
+                value={newCompany.industry}
+                onChange={(e) => setNewCompany({ ...newCompany, industry: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-description">Description</Label>
+              <Textarea
+                id="company-description"
+                placeholder="Brief description of the company..."
+                value={newCompany.description}
+                onChange={(e) => setNewCompany({ ...newCompany, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creating}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCompany} disabled={creating || !newCompany.name.trim()}>
+              {creating ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Company
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

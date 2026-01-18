@@ -184,3 +184,52 @@ export const mergeCompanies = mutation({
     });
   },
 });
+
+export const createCompany = mutation({
+  args: {
+    name: v.string(),
+    website: v.optional(v.string()),
+    description: v.optional(v.string()),
+    industry: v.optional(v.string()),
+    headquarters: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    const slug = slugify(args.name);
+
+    // Check if company with this slug already exists
+    const existing = await ctx.db
+      .query("companies")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+
+    if (existing) {
+      throw new Error(`A company with the name "${args.name}" already exists`);
+    }
+
+    // Check if slug is used as an alias
+    const allCompanies = await ctx.db.query("companies").collect();
+    const aliasConflict = allCompanies.find(
+      (c) => c.aliases && c.aliases.includes(slug)
+    );
+
+    if (aliasConflict) {
+      throw new Error(
+        `This company name conflicts with an alias of "${aliasConflict.name}"`
+      );
+    }
+
+    const companyId = await ctx.db.insert("companies", {
+      name: args.name.trim(),
+      slug,
+      website: args.website?.trim() || undefined,
+      description: args.description?.trim() || undefined,
+      industry: args.industry?.trim() || undefined,
+      headquarters: args.headquarters?.trim() || undefined,
+      createdAt: Date.now(),
+    });
+
+    return companyId;
+  },
+});
