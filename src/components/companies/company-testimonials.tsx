@@ -65,6 +65,13 @@ export function CompanyTestimonials({ companyId, companyName }: CompanyTestimoni
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Testimonials</h2>
 
+      {/* Disclaimer */}
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+        <p className="text-xs text-amber-800 dark:text-amber-200">
+          <strong>Please note:</strong> Testimonials represent personal opinions of individual students and are not endorsed by or representative of the views of ISE, UL, {companyName}, or this website&apos;s administrators. Information may be subjective, outdated, or inaccurate.
+        </p>
+      </div>
+
       {/* Testimonial form for authenticated users */}
       <TestimonialForm companyId={companyId} companyName={companyName} />
 
