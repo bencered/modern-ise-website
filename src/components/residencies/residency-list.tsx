@@ -10,6 +10,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ResidencyCard, ResidencyCardSkeleton } from "./residency-card";
 import { ResidencySidebar, ResidencyDrawerContent } from "./residency-sidebar";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useResidencyRatings } from "@/hooks/useResidencyRatings";
 import { MapPin, ArrowUpDown, X, Star, Layers, LayoutGrid, Table, Building2 } from "lucide-react";
 import Image from "next/image";
 
@@ -75,8 +76,7 @@ interface Residency {
   featuredTestimonial?: FeaturedTestimonial | null;
 }
 
-// localStorage helpers for personal ratings
-const RATINGS_KEY = "residency_ratings";
+// localStorage helpers for preferences
 const PREFERENCES_KEY = "residency_preferences";
 
 interface Preferences {
@@ -84,15 +84,6 @@ interface Preferences {
   sortBy: string;
   aggregateByCompany: boolean;
   selectedType: string;
-}
-
-function getPersonalRatings(): Record<string, number> {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(RATINGS_KEY) || "{}");
-  } catch {
-    return {};
-  }
 }
 
 function getPreferences(): Partial<Preferences> {
@@ -272,15 +263,16 @@ export function ResidencyList({ preloadedResidencies }: ResidencyListProps) {
   const [sortBy, setSortBy] = useState<string>("company");
   const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [personalRatings, setPersonalRatings] = useState<Record<string, number>>({});
   const [aggregateByCompany, setAggregateByCompany] = useState(true);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const isMobile = useIsMobile();
 
-  // Load personal ratings and preferences from localStorage
+  // Use the ratings hook for synced ratings
+  const { ratings: personalRatings, toggleRating } = useResidencyRatings();
+
+  // Load preferences from localStorage
   useEffect(() => {
-    setPersonalRatings(getPersonalRatings());
     const prefs = getPreferences();
     if (prefs.viewMode) setViewMode(prefs.viewMode);
     if (prefs.sortBy) setSortBy(prefs.sortBy);
@@ -294,11 +286,6 @@ export function ResidencyList({ preloadedResidencies }: ResidencyListProps) {
     if (!prefsLoaded) return;
     savePreferences({ viewMode, sortBy, aggregateByCompany, selectedType });
   }, [viewMode, sortBy, aggregateByCompany, selectedType, prefsLoaded]);
-
-  // Callback to refresh ratings when user rates something
-  const refreshRatings = useCallback(() => {
-    setPersonalRatings(getPersonalRatings());
-  }, []);
 
   // Use preloaded data (fetched server-side, cached by Next.js)
   const allResidencies = usePreloadedQuery(preloadedResidencies);
@@ -838,7 +825,7 @@ export function ResidencyList({ preloadedResidencies }: ResidencyListProps) {
       <ResidencySidebar
         residency={selectedResidency || null}
         onClose={() => setSelectedResidencyId(null)}
-        onRatingChange={refreshRatings}
+        toggleRating={toggleRating}
       />
 
       {/* Mobile Drawer - only rendered on mobile */}
@@ -854,7 +841,7 @@ export function ResidencyList({ preloadedResidencies }: ResidencyListProps) {
             <ResidencyDrawerContent
               residency={selectedResidency || null}
               onClose={() => setSelectedResidencyId(null)}
-              onRatingChange={refreshRatings}
+              toggleRating={toggleRating}
             />
           </DrawerContent>
         </Drawer>

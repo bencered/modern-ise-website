@@ -21,6 +21,7 @@ import type * as rateLimit from "../rateLimit.js";
 import type * as residencies from "../residencies.js";
 import type * as sync from "../sync.js";
 import type * as testimonials from "../testimonials.js";
+import type * as userRatings from "../userRatings.js";
 
 import type {
   ApiFromModules,
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   residencies: typeof residencies;
   sync: typeof sync;
   testimonials: typeof testimonials;
+  userRatings: typeof userRatings;
 }>;
 
 /**
