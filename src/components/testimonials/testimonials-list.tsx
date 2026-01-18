@@ -198,12 +198,7 @@ export function TestimonialsList({ preloadedTestimonials, preloadedCompanies }: 
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="Share your experience working at this company during your residency..."
                       rows={4}
-                      maxLength={500}
-                      className="resize-none"
                     />
-                    <p className="text-xs text-muted-foreground text-right">
-                      {content.length}/500 characters
-                    </p>
                   </div>
 
                   {/* Rating and Anonymous in a row */}

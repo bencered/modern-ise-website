@@ -116,12 +116,7 @@ export function TestimonialForm({ companyId, companyName }: TestimonialFormProps
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your experience working at this company..."
               rows={4}
-              maxLength={500}
-              className="resize-none"
             />
-            <p className="text-xs text-muted-foreground">
-              {content.length}/500 characters
-            </p>
           </div>
 
           <div className="space-y-2">

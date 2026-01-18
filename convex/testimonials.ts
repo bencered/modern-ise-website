@@ -198,11 +198,6 @@ export const submit = mutation({
       throw new Error("Authentication required");
     }
 
-    // Validate content length
-    if (args.content.length > 500) {
-      throw new Error("Testimonial must be 500 characters or less");
-    }
-
     if (args.content.trim().length < 10) {
       throw new Error("Testimonial must be at least 10 characters");
     }

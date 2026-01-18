@@ -64,7 +64,7 @@ export default defineSchema({
     .index("by_company", ["companyId"]),
 
   testimonials: defineTable({
-    content: v.string(), // Max 500 chars (validated in mutation)
+    content: v.string(),
     rating: v.optional(v.number()), // 1-5 stars
     companyId: v.id("companies"),
     residencyId: v.optional(v.id("residencies")), // Optional specific residency
