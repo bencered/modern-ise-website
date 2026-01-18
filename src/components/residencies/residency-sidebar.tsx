@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useConvexAuth } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -326,6 +327,8 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, toggleRa
   toggleRating?: (residencyId: Id<"residencies">, rating: number) => Promise<void>;
 }) {
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
+  const { isAuthenticated } = useConvexAuth();
+  const router = useRouter();
   const rawName = residency.company?.name || residency.name.split("|")[1]?.trim() || residency.name || "";
   const companyName = cleanName(rawName);
 
@@ -409,7 +412,13 @@ function ResidencyContent({ residency, onClose, showCloseButton = true, toggleRa
       {residency.company?._id && (
         <>
           <button
-            onClick={() => setTestimonialModalOpen(true)}
+            onClick={() => {
+              if (!isAuthenticated) {
+                router.push("/signin");
+                return;
+              }
+              setTestimonialModalOpen(true);
+            }}
             className="mt-4 flex w-full items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-left transition-colors hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/50 dark:hover:bg-blue-950"
           >
             <MessageSquarePlus className="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
