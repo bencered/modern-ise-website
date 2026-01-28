@@ -98,3 +98,41 @@ export const listCompanies = query({
   },
 });
 
+// Lightweight query for rankings page - gets companies with their residency types
+export const listCompaniesForRankings = query({
+  args: {},
+  handler: async (ctx) => {
+    // Fetch companies and residencies in parallel
+    const [companies, residencies] = await Promise.all([
+      ctx.db.query("companies").collect(),
+      ctx.db.query("residencies").collect(),
+    ]);
+
+    // Build residency types map: companyId -> Set of residency types
+    const residencyTypesMap = new Map<string, Set<string>>();
+    for (const r of residencies) {
+      if (r.companyId) {
+        if (!residencyTypesMap.has(r.companyId)) {
+          residencyTypesMap.set(r.companyId, new Set());
+        }
+        residencyTypesMap.get(r.companyId)!.add(r.residencyType);
+      }
+    }
+
+    // Build result with image URLs
+    const result = await Promise.all(
+      companies.map(async (company) => ({
+        _id: company._id,
+        name: company.name,
+        slug: company.slug,
+        imageUrl: company.imageId
+          ? await ctx.storage.getUrl(company.imageId)
+          : null,
+        residencyTypes: Array.from(residencyTypesMap.get(company._id) || []),
+      }))
+    );
+
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  },
+});
+

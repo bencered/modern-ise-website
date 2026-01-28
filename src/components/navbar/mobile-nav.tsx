@@ -36,6 +36,7 @@ export const MobileNavbar = () => {
           <Link href="/">Home</Link>
           <Link href="/residencies">Residencies</Link>
           <Link href="/testimonials">Testimonials</Link>
+          <Link href="/rankings">Rankings</Link>
           <AuthStatusMobile />
           <a
             href="https://github.com/bencered/modern-ise-website"

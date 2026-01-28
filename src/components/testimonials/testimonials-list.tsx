@@ -35,6 +35,15 @@ function cleanName(name: string): string {
     .trim();
 }
 
+type TestimonialSize = "small" | "medium" | "large";
+
+function getTestimonialSize(content: string): TestimonialSize {
+  const length = content.length;
+  if (length < 200) return "small";
+  if (length < 500) return "medium";
+  return "large";
+}
+
 export function TestimonialsList({ preloadedTestimonials, preloadedCompanies }: TestimonialsListProps) {
   const testimonials = usePreloadedQuery(preloadedTestimonials);
   const companies = usePreloadedQuery(preloadedCompanies);
@@ -289,10 +298,17 @@ export function TestimonialsList({ preloadedTestimonials, preloadedCompanies }: 
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial._id} testimonial={testimonial} />
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]" style={{ gridAutoFlow: 'dense' }}>
+            {testimonials.map((testimonial) => {
+              const size = getTestimonialSize(testimonial.content);
+              return (
+                <TestimonialCard
+                  key={testimonial._id}
+                  testimonial={testimonial}
+                  size={size}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -315,13 +331,20 @@ interface TestimonialCardProps {
       imageUrl?: string | null;
     } | null;
   };
+  size: TestimonialSize;
 }
 
-function TestimonialCard({ testimonial }: TestimonialCardProps) {
+function TestimonialCard({ testimonial, size }: TestimonialCardProps) {
   const companyName = testimonial.company ? cleanName(testimonial.company.name) : "Unknown Company";
 
+  const sizeClasses = {
+    small: "",
+    medium: "md:col-span-2 md:row-span-1",
+    large: "md:col-span-2 md:row-span-2",
+  };
+
   return (
-    <Card className="flex flex-col">
+    <Card className={`flex flex-col h-full ${sizeClasses[size]}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           {testimonial.company?.slug ? (

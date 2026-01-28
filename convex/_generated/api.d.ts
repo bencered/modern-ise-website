@@ -13,6 +13,7 @@ import type * as admin from "../admin.js";
 import type * as allowedEmails from "../allowedEmails.js";
 import type * as auth from "../auth.js";
 import type * as companies from "../companies.js";
+import type * as companyRankings from "../companyRankings.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as lib_requireAdmin from "../lib/requireAdmin.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   allowedEmails: typeof allowedEmails;
   auth: typeof auth;
   companies: typeof companies;
+  companyRankings: typeof companyRankings;
   crons: typeof crons;
   http: typeof http;
   "lib/requireAdmin": typeof lib_requireAdmin;

@@ -91,4 +91,13 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_residency", ["userId", "residencyId"]),
+
+  companyRankings: defineTable({
+    userId: v.id("users"),
+    category: v.string(), // "r1_only" | "r2_only" | "r1_r2" | "all_r1_r2" | "r3_r4_r5" | "all"
+    rankings: v.array(v.id("companies")), // Ordered array (index 0 = rank 1)
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_category", ["userId", "category"]),
 });
