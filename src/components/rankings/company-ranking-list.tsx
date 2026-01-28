@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -323,27 +323,39 @@ export function CompanyRankingList() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>(() => getStoredCategory());
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Cache companies data to prevent flash during refetch
+  const cachedCompanies = useRef<typeof companies>(undefined);
+  useEffect(() => {
+    if (companies !== undefined) {
+      cachedCompanies.current = companies;
+    }
+  }, [companies]);
+  const displayCompanies = companies ?? cachedCompanies.current;
+
   // Persist category to localStorage
   function handleCategoryChange(category: CategoryId) {
     setActiveCategory(category);
     localStorage.setItem(CATEGORY_KEY, category);
   }
 
-  const { rankings, saveRankings, clearRankings, isLoading } =
+  const { rankings, saveRankings, clearRankings } =
     useCompanyRankings(activeCategory);
+
+  // Only show full loading state on initial load, not category switches
+  const isInitialLoad = !displayCompanies;
 
   // Map companies to the expected format
   const allCompanies = useMemo(() => {
-    if (!companies) return [];
+    if (!displayCompanies) return [];
 
-    return companies.map((c) => ({
+    return displayCompanies.map((c) => ({
       _id: c._id,
       name: c.name,
       slug: c.slug,
       imageUrl: c.imageUrl ?? undefined,
       residencyTypes: c.residencyTypes,
     }));
-  }, [companies]);
+  }, [displayCompanies]);
 
   // Company map for quick lookups
   const companyMap = useMemo(() => {
@@ -453,53 +465,58 @@ export function CompanyRankingList() {
     clearRankings();
   }
 
-  if (!companies || isLoading) {
-    return (
-      <div className="space-y-6">
-        {/* Category tabs skeleton */}
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-20 rounded-lg" />
-          ))}
+  // Loading skeleton for content only (not category tabs)
+  const ContentSkeleton = () => (
+    <>
+      {/* Controls skeleton */}
+      <Skeleton className="h-10 w-36 rounded-lg" />
+
+      {/* Two column layout skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Ranked list skeleton */}
+        <div>
+          <Skeleton className="h-6 w-40 mb-3" />
+          <div className="min-h-[200px] p-4 rounded-lg border-2 border-border bg-muted/20 space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-background border-2 border-border">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <Skeleton className="w-10 h-10 rounded-md" />
+                <Skeleton className="h-5 flex-1" />
+                <Skeleton className="w-5 h-5" />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Controls skeleton */}
-        <Skeleton className="h-10 w-36 rounded-lg" />
-
-        {/* Two column layout skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Ranked list skeleton */}
-          <div>
-            <Skeleton className="h-6 w-40 mb-3" />
-            <div className="min-h-[200px] p-4 rounded-lg border-2 border-border bg-muted/20 space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-background border-2 border-border">
-                  <Skeleton className="w-8 h-8 rounded-full" />
-                  <Skeleton className="w-10 h-10 rounded-md" />
-                  <Skeleton className="h-5 flex-1" />
-                  <Skeleton className="w-5 h-5" />
-                </div>
+        {/* Unranked pool skeleton */}
+        <div>
+          <Skeleton className="h-6 w-32 mb-3" />
+          <div className="min-h-[100px] p-4 rounded-lg border-2 border-dashed border-border bg-muted/20">
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="w-16 h-16 md:w-20 md:h-20 rounded-lg" />
               ))}
             </div>
           </div>
-
-          {/* Unranked pool skeleton */}
-          <div>
-            <Skeleton className="h-6 w-32 mb-3" />
-            <div className="min-h-[100px] p-4 rounded-lg border-2 border-dashed border-border bg-muted/20">
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <Skeleton key={i} className="w-16 h-16 md:w-20 md:h-20 rounded-lg" />
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
+      </div>
 
-        {/* Stats skeleton */}
-        <div className="flex justify-center">
-          <Skeleton className="h-5 w-48" />
-        </div>
+      {/* Stats skeleton */}
+      <div className="flex justify-center">
+        <Skeleton className="h-5 w-48" />
+      </div>
+    </>
+  );
+
+  if (isInitialLoad) {
+    return (
+      <div className="space-y-6">
+        {/* Always show category tabs - they never change */}
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+        />
+        <ContentSkeleton />
       </div>
     );
   }

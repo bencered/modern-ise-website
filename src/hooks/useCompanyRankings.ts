@@ -53,6 +53,24 @@ export function useCompanyRankings(category: CategoryId) {
     Id<"companies">[] | null
   >(null);
 
+  // Cache server rankings per category to prevent flash during refetch
+  const cachedServerRankings = useRef<Record<CategoryId, Id<"companies">[]>>({} as Record<CategoryId, Id<"companies">[]>);
+  const prevCategory = useRef<CategoryId>(category);
+
+  useEffect(() => {
+    if (serverRankings !== undefined) {
+      cachedServerRankings.current[category] = serverRankings as Id<"companies">[];
+    }
+  }, [serverRankings, category]);
+
+  // Clear optimistic rankings when category changes
+  useEffect(() => {
+    if (prevCategory.current !== category) {
+      setOptimisticRankings(null);
+      prevCategory.current = category;
+    }
+  }, [category]);
+
   // Track if we've done the migration
   const hasMigrated = useRef(false);
   const wasAuthenticated = useRef(false);
@@ -97,14 +115,18 @@ export function useCompanyRankings(category: CategoryId) {
     }
   }, [isAuthenticated, authLoading, serverRankings, importRankingsMutation]);
 
-  // Compute current rankings
+  // Compute current rankings (use cached value during refetch to prevent flash)
   const rankings: Id<"companies">[] = (() => {
     if (isAuthenticated) {
-      // Use optimistic update if available, otherwise server data
+      // Use optimistic update if available, otherwise server data, fall back to cache
       if (optimisticRankings !== null) {
         return optimisticRankings;
       }
-      return (serverRankings as Id<"companies">[]) || [];
+      if (serverRankings !== undefined) {
+        return serverRankings as Id<"companies">[];
+      }
+      // Use cached value during refetch
+      return cachedServerRankings.current[category] || [];
     } else {
       return localRankings[category] || [];
     }
@@ -176,10 +198,14 @@ export function useCompanyRankings(category: CategoryId) {
     };
   }, []);
 
+  // Only show loading on initial load, not category switches with cached data
+  const hasCache = cachedServerRankings.current[category] !== undefined;
+  const isLoading = authLoading || (isAuthenticated && serverRankings === undefined && !hasCache);
+
   return {
     rankings,
     saveRankings,
     clearRankings,
-    isLoading: authLoading || (isAuthenticated && serverRankings === undefined),
+    isLoading,
   };
 }
