@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theming/theme-provider";
@@ -32,6 +33,9 @@ export default function RootLayout({
   return (
     <ConvexAuthNextjsServerProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <Script defer src="https://umami.bence.red/script.js" data-website-id="4f24648d-fe5b-4f8d-946f-fca007b3dd95" />
+        </head>
         <body
           className={`
               ${geistSans.variable}
