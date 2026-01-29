@@ -18,6 +18,8 @@ export const Footer = () => {
             <Link className="hover:underline" href="/residencies">Residencies</Link>
             <Link className="hover:underline" href="/testimonials">Testimonials</Link>
             <Link className="hover:underline" href="/course-details/why-choose-ise">Why Choose ISE?</Link>
+            <Link className="hover:underline" href="/account">Account Settings</Link>
+            <Link className="hover:underline" href="/privacy">Privacy Policy</Link>
           </div>
         </div>
 
