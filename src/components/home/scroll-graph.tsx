@@ -105,10 +105,7 @@ const AnimatedBarChart = () => {
         </div>
       </div>
 
-      <div className="w-full space-y-4 border-2 border-neutral-800/70 bg-background/70 p-8 lg:col-span-2">
-      </div>
-
-      <div className="w-full space-y-4 border-2 border-neutral-800/70 bg-background/70 p-8 lg:col-span-3">
+      <div className="w-full space-y-4 border-2 border-neutral-800/70 bg-background/70 p-8 lg:col-span-5">
         <h2 className="mb-6 text-2xl font-bold">Real-World Placements</h2>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
