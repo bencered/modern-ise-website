@@ -35,9 +35,10 @@ const RESIDENCY_TYPES = [
   { value: "R2", label: "R2" },
   { value: "R3", label: "R3" },
   { value: "R4", label: "R4" },
+  { value: "R5", label: "R5" },
 ];
 
-const TYPE_ORDER = ["R1", "R1+R2", "R2", "R3", "R4"];
+const TYPE_ORDER = ["R1", "R1+R2", "R2", "R3", "R4", "R5"];
 
 const SORT_OPTIONS = [
   { value: "company", label: "Company Name" },

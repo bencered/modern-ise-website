@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(parseInt(limitParam || "50", 10) || 50, 1), 100);
 
   // Validate type parameter
-  const validTypes = ["R1", "R1+R2", "R2", "R3", "R4"];
+  const validTypes = ["R1", "R1+R2", "R2", "R3", "R4", "R5"];
   if (type && !validTypes.includes(type)) {
     return NextResponse.json(
       {
