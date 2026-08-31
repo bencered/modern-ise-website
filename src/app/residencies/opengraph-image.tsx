@@ -84,7 +84,7 @@ export default async function Image() {
               maxWidth: "800px",
             }}
           >
-            Browse R1, R2, R3 & R4 opportunities with top companies
+            Browse R1, R2, R3, R4 & R5 opportunities with top companies
           </div>
           <div
             style={{
@@ -93,7 +93,7 @@ export default async function Image() {
               marginTop: "32px",
             }}
           >
-            {["R1", "R2", "R3", "R4"].map((type) => (
+            {["R1", "R2", "R3", "R4", "R5"].map((type) => (
               <div
                 key={type}
                 style={{
