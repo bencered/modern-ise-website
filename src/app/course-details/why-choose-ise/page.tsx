@@ -11,7 +11,7 @@ export default function Home() {
 				In Immersive Software Engineering you’ll work with top professors, in beautiful facilities, with world-class companies, learning much more than in a traditional programme.
 			</h2>
 
-			<NiceLink size="xl" className="group font-mono" href="/schools/">
+			<NiceLink size="xl" className="group font-mono" href="https://software-engineering.ie/schools/">
 				<School size={24} className="min-h-5 min-w-5 transition-all duration-100 group-hover:scale-110" />
 				Book an ISE visit to your school
 			</NiceLink>
